@@ -7,7 +7,7 @@ import (
 	ctx509 "github.com/google/certificate-transparency-go/x509"
 )
 
-func buildCertificateChain(certs []*x509.Certificate) ([]*ctx509.Certificate, error) {
+func BuildCertificateChain(certs []*x509.Certificate) ([]*ctx509.Certificate, error) {
 	chain := make([]*ctx509.Certificate, len(certs))
 
 	for i, cert := range certs {

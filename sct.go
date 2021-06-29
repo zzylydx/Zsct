@@ -53,7 +53,7 @@ func (c *checker) checkConnectionState(state *tls.ConnectionState) error {
 		return errors.New("no peer certificates in TLS connection state")
 	}
 
-	chain, err := buildCertificateChain(state.PeerCertificates) // 构建证书链
+	chain, err := BuildCertificateChain(state.PeerCertificates) // 构建证书链
 	if err != nil {
 		return err
 	}
