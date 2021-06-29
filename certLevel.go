@@ -285,7 +285,7 @@ var DomainValidationOIDs = map[string]interface{}{
 	"2.23.140.1.2.1": nil,
 }
 
-func validationLevel(out *ctx509.Certificate) string {
+func ValidationLevel(out *ctx509.Certificate) string {
 	// See http://unmitigatedrisk.com/?p=203
 	validationLevel := getMaxCertValidationLevel(out.PolicyIdentifiers)
 	if validationLevel == UnknownValidationLevel {

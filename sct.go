@@ -28,7 +28,7 @@ type checker struct {
 }
 
 // getDefaultChecker returns the default Checker, initializing it if needed.
-func getDefaultChecker() *checker {
+func GetDefaultChecker() *checker {
 	defaultCheckerOnce.Do(func() {
 		defaultChecker = &checker{
 			ll: newDefaultLogList(),
@@ -41,7 +41,7 @@ func getDefaultChecker() *checker {
 // CheckConnectionState examines SCTs (both embedded and in the TLS extension) and returns
 // nil if at least one of them is valid.
 func CheckConnectionState(state *tls.ConnectionState) error {
-	return getDefaultChecker().checkConnectionState(state)
+	return GetDefaultChecker().checkConnectionState(state)
 }
 
 func (c *checker) checkConnectionState(state *tls.ConnectionState) error {
@@ -200,7 +200,7 @@ func (c *checker) checkOneSCT(x509SCT *ctx509.SerializedSCT, merkleLeaf *ct.Merk
 
 // use for webemail measurement, only check sct validity. true or false
 // Check SCTs provided with the TLS handshake. Returns an error if no SCT is valid.
-func (c *checker) verifyTLSSCTs(sct []byte, chain []*ctx509.Certificate) bool {
+func (c *checker) VerifyTLSSCTs(sct []byte, chain []*ctx509.Certificate) bool {
 	merkleLeaf, err := ct.MerkleTreeLeafFromChain(chain, ct.X509LogEntryType, 0)
 	if err != nil {
 		return false
@@ -217,7 +217,7 @@ func (c *checker) verifyTLSSCTs(sct []byte, chain []*ctx509.Certificate) bool {
 }
 
 // Check SCTs embedded in the leaf certificate. Returns an error if no SCT is valid.
-func (c *checker) verifyCertSCTs(sct *ctx509.SerializedSCT, chain []*ctx509.Certificate) bool {
+func (c *checker) VerifyCertSCTs(sct *ctx509.SerializedSCT, chain []*ctx509.Certificate) bool {
 	leaf := chain[0]
 	if len(leaf.SCTList.SCTList) == 0 {
 		return false
@@ -243,7 +243,7 @@ func (c *checker) verifyCertSCTs(sct *ctx509.SerializedSCT, chain []*ctx509.Cert
 }
 
 // Check SCTs provided with the TLS handshake. Returns an error if no SCT is valid.
-func (c *checker) verifyOcspSCTs(sct []byte, chain []*ctx509.Certificate) bool {
+func (c *checker) VerifyOcspSCTs(sct []byte, chain []*ctx509.Certificate) bool {
 	merkleLeaf, err := ct.MerkleTreeLeafFromChain(chain, ct.X509LogEntryType, 0)
 	if err != nil {
 		return false
