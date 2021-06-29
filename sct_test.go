@@ -1,6 +1,7 @@
 package sct_test
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/mberhault/go-sct"
@@ -16,5 +17,7 @@ func ExampleCheckConnectionState() {
 	err = sct.CheckConnectionState(resp.TLS)
 	if err != nil {
 		panic("SCT check failed " + err.Error())
+	}else{
+		fmt.Println("sct verify ok")
 	}
 }

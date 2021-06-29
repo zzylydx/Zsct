@@ -36,7 +36,7 @@ func newDefaultLogList() *loglist2.LogList {
 func newLogListFromSources(listURL, listSigURL, listPubKeyURL string) *loglist2.LogList {
 	jsonData, err := ctx509util.ReadFileOrURL(listURL, http.DefaultClient)
 	if err != nil {
-		log.Fatalf("failed to fetch log list %s: %v", listURL, err)
+		log.Fatalf("failed to fetch log list %s: %v", listURL, err) // 抓取log list，sig，pubkey
 	}
 
 	sigData, err := ctx509util.ReadFileOrURL(listSigURL, http.DefaultClient)
@@ -54,12 +54,12 @@ func newLogListFromSources(listURL, listSigURL, listPubKeyURL string) *loglist2.
 		log.Fatalf("could not parse log list public key %s: %v", listPubKeyURL, err)
 	}
 
-	ll, err := loglist2.NewFromSignedJSON(jsonData, sigData, pubKey)
+	ll, err := loglist2.NewFromSignedJSON(jsonData, sigData, pubKey) // 构成一个log list，签名、原始值、公钥
 	if err != nil {
 		log.Fatalf("could not verify log list signature: %v", err)
 	}
 
-	qualifiedLogs := ll.SelectByStatus(qualifiedLogs)
+	qualifiedLogs := ll.SelectByStatus(qualifiedLogs) // 根据状态选择active
 	return &qualifiedLogs
 }
 

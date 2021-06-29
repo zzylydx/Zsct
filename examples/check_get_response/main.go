@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	url := "https://www.certificate-transparency.org"
+	url := "https://www.baidu.com"
 	// Known to return SCTs in TLS extensions.
 	// url := "https://ritter.vg"
 
