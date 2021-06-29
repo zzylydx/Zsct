@@ -14,7 +14,7 @@ import (
 	"github.com/google/certificate-transparency-go/loglist2"
 	ctx509 "github.com/google/certificate-transparency-go/x509"
 	ctx509util "github.com/google/certificate-transparency-go/x509util"
-	zocsp "github.com/zzylydx/zcrypto/x509/revocation/ocsp"
+	//zocsp "github.com/zzylydx/zcrypto/x509/revocation/ocsp"
 )
 
 var (
@@ -77,18 +77,18 @@ func (c *checker) checkConnectionState(state *tls.ConnectionState) error {
 	// TODO(mberhault): check SCTs in OSCP response.
 	// OcspStapling sct verify
 	// ocsp和tls方式一样
-	ocspResponse, err := zocsp.ConvertResponse(string(state.OCSPResponse))
-	if err != nil {
-		return nil
-	}
-	var sctListByte [][]byte
-	sctListByte, err = zocsp.ParseSCTListFromOcspResponseByte(ocspResponse)
-	if err = c.checkOcspSCTs(sctListByte, chain); err != nil {
-		lastError = err
-	} else {
-		return nil
-	}
-
+	//ocspResponse, err := zocsp.ConvertResponse(string(state.OCSPResponse))
+	//if err != nil {
+	//	return nil
+	//}
+	//var sctListByte [][]byte
+	//sctListByte, err = zocsp.ParseSCTListFromOcspResponseByte(ocspResponse)
+	//if err = c.checkOcspSCTs(sctListByte, chain); err != nil {
+	//	lastError = err
+	//} else {
+	//	return nil
+	//}
+	//
 	return lastError
 }
 
