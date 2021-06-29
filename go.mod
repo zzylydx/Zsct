@@ -1,6 +1,6 @@
 module github.com/zzylydx/Zsct
 
-go 1.15
+go 1.13
 
 require (
 	github.com/coreos/bbolt v1.3.2 // indirect
