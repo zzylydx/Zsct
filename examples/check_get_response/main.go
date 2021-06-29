@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mberhault/go-sct"
+	"github.com/zzylydx/Zsct"
 )
 
 func main() {

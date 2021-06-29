@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/mberhault/go-sct"
+	"github.com/zzylydx/Zsct"
 )
 
 func ExampleCheckConnectionState() {
