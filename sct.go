@@ -105,7 +105,7 @@ func (c *checker) checkTLSSCTs(scts [][]byte, chain []*ctx509.Certificate) error
 
 	for _, sct := range scts {
 		x509SCT := &ctx509.SerializedSCT{Val: sct}
-		err := c.checkOneSCT(x509SCT, merkleLeaf)
+		_, err := c.checkOneSCT(x509SCT, merkleLeaf)
 		if err == nil {
 			// Valid: return early.
 			return nil
@@ -134,7 +134,7 @@ func (c *checker) checkCertSCTs(chain []*ctx509.Certificate) error {
 	}
 
 	for _, sct := range leaf.SCTList.SCTList {
-		err := c.checkOneSCT(&sct, merkleLeaf)
+		_,err := c.checkOneSCT(&sct, merkleLeaf)
 		if err == nil {
 			// Valid: return early.
 			return nil
@@ -153,7 +153,7 @@ func (c *checker) checkOcspSCTs(scts [][]byte, chain []*ctx509.Certificate) erro
 
 	for _, sct := range scts {
 		x509SCT := &ctx509.SerializedSCT{Val: sct}
-		err := c.checkOneSCT(x509SCT, merkleLeaf)
+		_,err := c.checkOneSCT(x509SCT, merkleLeaf)
 		if err == nil {
 			// Valid: return early.
 			return nil
@@ -163,98 +163,102 @@ func (c *checker) checkOcspSCTs(scts [][]byte, chain []*ctx509.Certificate) erro
 	return errors.New("no valid SCT in SSL handshake")
 }
 
-func (c *checker) checkOneSCT(x509SCT *ctx509.SerializedSCT, merkleLeaf *ct.MerkleTreeLeaf) error {
+func (c *checker) checkOneSCT(x509SCT *ctx509.SerializedSCT, merkleLeaf *ct.MerkleTreeLeaf) (string, error) {
 	sct, err := ctx509util.ExtractSCT(x509SCT) // 反序列化sct
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	ctLog := c.ll.FindLogByKeyHash(sct.LogID.KeyID) // 找到对应的ct log
 	if ctLog == nil {
-		return fmt.Errorf("no log found with KeyID %x", sct.LogID)
+		return "", fmt.Errorf("no log found with KeyID %x", sct.LogID)
 	}
+	logDescription := ctLog.Description
 
 	logInfo, err := newLogInfoFromLog(ctLog)
 	if err != nil {
-		return fmt.Errorf("could not create client for log %s", ctLog.Description) // 不懂
+		return "", fmt.Errorf("could not create client for log %s", ctLog.Description) // 不懂
 	}
 
 	err = logInfo.VerifySCTSignature(*sct, *merkleLeaf) // 验证签名
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = logInfo.VerifyInclusion(context.Background(), *merkleLeaf, sct.Timestamp)
 	if err != nil {
 		age := time.Since(ct.TimestampToTime(sct.Timestamp))
 		if age >= logInfo.MMD {
-			return fmt.Errorf("failed to verify inclusion in log %q", ctLog.Description)
+			return "", fmt.Errorf("failed to verify inclusion in log %q", ctLog.Description)
 		}
 
 		// TODO(mberhault): option to fail on timestamp too recent.
-		return nil
+		return logDescription, nil
 	}
 
-	return nil
+	return logDescription, nil
 }
 
 // use for webemail measurement, only check sct validity. true or false
 // Check SCTs provided with the TLS handshake. Returns an error if no SCT is valid.
-func (c *checker) VerifyTLSSCTs(sct []byte, chain []*ctx509.Certificate) bool {
+func (c *checker) VerifyTLSSCTs(sct []byte, chain []*ctx509.Certificate) (string, bool) {
+	var logDescription string
 	merkleLeaf, err := ct.MerkleTreeLeafFromChain(chain, ct.X509LogEntryType, 0)
 	if err != nil {
-		return false
+		return "", false
 	}
 
 	x509SCT := &ctx509.SerializedSCT{Val: sct}
-	err = c.checkOneSCT(x509SCT, merkleLeaf)
+	logDescription, err = c.checkOneSCT(x509SCT, merkleLeaf)
 	if err != nil {
 		// Valid: return early.
-		return false
+		return "", false
 	}
 
-	return true
+	return logDescription, true
 }
 
 // Check SCTs embedded in the leaf certificate. Returns an error if no SCT is valid.
-func (c *checker) VerifyCertSCTs(sct *ctx509.SerializedSCT, chain []*ctx509.Certificate) bool {
+func (c *checker) VerifyCertSCTs(sct *ctx509.SerializedSCT, chain []*ctx509.Certificate) (string, bool) {
+	var logDescription string
 	leaf := chain[0]
 	if len(leaf.SCTList.SCTList) == 0 {
-		return false
+		return "", false
 	}
 
 	if len(chain) < 2 {
 		// TODO(mberhault): optionally fetch issuer from IssuingCertificateURL.
-		return false
+		return "", false
 	}
 	issuer := chain[1]
 
 	merkleLeaf, err := ct.MerkleTreeLeafForEmbeddedSCT([]*ctx509.Certificate{leaf, issuer}, 0)
 	if err != nil {
-		return false
+		return "", false
 	}
 
-	err = c.checkOneSCT(sct, merkleLeaf)
+	logDescription, err = c.checkOneSCT(sct, merkleLeaf)
 	if err != nil {
-		return false
+		return "", false
 	}
 
-	return true
+	return logDescription,true
 }
 
 // Check SCTs provided with the TLS handshake. Returns an error if no SCT is valid.
-func (c *checker) VerifyOcspSCTs(sct []byte, chain []*ctx509.Certificate) bool {
+func (c *checker) VerifyOcspSCTs(sct []byte, chain []*ctx509.Certificate) (string, bool) {
+	var logDescription string
 	merkleLeaf, err := ct.MerkleTreeLeafFromChain(chain, ct.X509LogEntryType, 0)
 	if err != nil {
-		return false
+		return "", false
 	}
 
 	x509SCT := &ctx509.SerializedSCT{Val: sct}
-	err = c.checkOneSCT(x509SCT, merkleLeaf)
+	logDescription, err = c.checkOneSCT(x509SCT, merkleLeaf)
 	if err != nil {
-		return false
+		return "", false
 	}
 
-	return true
+	return logDescription, true
 }
 
